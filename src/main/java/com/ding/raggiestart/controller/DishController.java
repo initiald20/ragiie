@@ -6,6 +6,7 @@ import com.ding.raggiestart.common.R;
 import com.ding.raggiestart.dto.DishDto;
 import com.ding.raggiestart.entity.Category;
 import com.ding.raggiestart.entity.Dish;
+import com.ding.raggiestart.entity.DishFlavor;
 import com.ding.raggiestart.service.CategoryService;
 import com.ding.raggiestart.service.DishFlavorService;
 import com.ding.raggiestart.service.DishService;
@@ -74,12 +75,31 @@ public class DishController {
     }
 
     @GetMapping("/list")
-    public R<List<Dish>> list(Dish dish){
+    public R<List<DishDto>> list(Dish dish){
         LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(dish.getCategoryId() != null,Dish::getCategoryId,dish.getCategoryId());
         queryWrapper.eq(Dish::getStatus,1);
         queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
         List<Dish> list = dishService.list(queryWrapper);
-        return R.success(list);
+
+        List<DishDto> dishDtoList = list.stream().map((item) -> {
+            DishDto dishDto = new DishDto();
+            BeanUtils.copyProperties(item, dishDto);
+
+            Category category = categoryService.getById(item.getCategoryId());
+            if (category != null) {
+                String categoryName = category.getName();
+                dishDto.setCategoryName(categoryName);
+            }
+
+            LambdaQueryWrapper<DishFlavor> flvqueryMapper = new LambdaQueryWrapper<>();
+            flvqueryMapper.eq(DishFlavor::getDishId, item.getId());
+
+            List<DishFlavor> dishFlavorList = dishFlavorService.list(flvqueryMapper);
+            dishDto.setFlavors(dishFlavorList);
+            return dishDto;
+        }).collect(Collectors.toList());
+
+        return R.success(dishDtoList);
     }
 }
