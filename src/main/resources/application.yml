@@ -12,3 +12,5 @@ mybatis-plus:
     db-config:
       id-type: assign_id #如果不设置类型值，默认则使用IdType.ASSIGN_ID策略（自3.3.0起）。
       #该策略会使用雪花算法自动生成主键ID，主键类型为长或字符串（分别对应的MySQL的表字段为BIGINT和VARCHAR）
+raggie:
+  path: D:\temp\upload
