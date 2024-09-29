@@ -12,6 +12,7 @@ import com.ding.raggiestart.service.DishFlavorService;
 import com.ding.raggiestart.service.DishService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +42,7 @@ public class DishController {
         redisTemplate.delete(dkey);
         return R.success("新增成功");
     }
+
     @GetMapping("/page")
     public R<Page> page(int page,int pageSize,String name){
         Page<Dish> pageInfo = new Page<>(page, pageSize);
