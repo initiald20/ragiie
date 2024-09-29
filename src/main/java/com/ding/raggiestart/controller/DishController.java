@@ -37,6 +37,8 @@ public class DishController {
     @PostMapping
     public R<String> save(@RequestBody DishDto dishDto) {
         dishService.saveWithFlavor(dishDto);
+        String dkey = "dish" + dishDto.getCategoryId();
+        redisTemplate.delete(dkey);
         return R.success("新增成功");
     }
     @GetMapping("/page")
@@ -76,18 +78,19 @@ public class DishController {
     @PutMapping
     public R<String> update(@RequestBody DishDto dishDto){
         dishService.updateWithFlavor(dishDto);
+        String dkey = "dish" + dishDto.getCategoryId();
+        redisTemplate.delete(dkey);
         return R.success("修改成功");
     }
 
     @GetMapping("/list")
     public R<List<DishDto>> list(Dish dish){
-        List<DishDto> dishDtoList = null;
+        String dkey = "dish" + dish.getCategoryId();
+        List<DishDto> dishDtoList = (List<DishDto>) redisTemplate.opsForValue().get(dkey);
 
-//        dishDtoList = (List<DishDto>) redisTemplate.opsForValue().get(dish.getCategoryId());
-//
-//        if(dishDtoList != null){
-//            return R.success(dishDtoList);
-//        }
+        if(dishDtoList != null){
+            return R.success(dishDtoList);
+        }
         LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(dish.getCategoryId() != null,Dish::getCategoryId,dish.getCategoryId());
         queryWrapper.eq(Dish::getStatus,1);
@@ -111,7 +114,7 @@ public class DishController {
             dishDto.setFlavors(dishFlavorList);
             return dishDto;
         }).collect(Collectors.toList());
-        redisTemplate.opsForValue().set(dish.getCategoryId(),dishDtoList, 60, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(dkey,dishDtoList, 60, TimeUnit.MINUTES);
         return R.success(dishDtoList);
     }
 }
